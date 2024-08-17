@@ -15,4 +15,5 @@ extension SizeExtension on num {
   SizedBox get pw => SizedBox(width: toDouble());
 }
 
-const String mainBaseUrl = "https://api.spotify.com/v1/audiobooks";
+const String mainBaseUrl = "https://spotify23.p.rapidapi.com";
+const String mainBaseUrl2 = "https://www.deezer.com";

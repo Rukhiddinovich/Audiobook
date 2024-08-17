@@ -16,22 +16,26 @@ class AppRoutes {
             builder: (context) => const AllAudiobooksScreen());
       case RouteNames.audiobookScreen:
         return CupertinoPageRoute(
-            builder: (context) => const AudiobookScreen());
+          builder: (context) => AudiobookScreen(
+            datum: (settings.arguments as List)[0] as Datum,
+            index: (settings.arguments as List)[1] as int,
+          ),
+        );
       default:
         return CupertinoPageRoute(
             builder: (context) => _buildUnknownRoutePage());
     }
   }
 
-  static Route _buildPageRoute(Widget page) {
-    return PageTransition(
-      type: PageTransitionType.rightToLeft,
-      reverseDuration: const Duration(milliseconds: 300),
-      duration: const Duration(milliseconds: 300),
-      child: page,
-      curve: Curves.easeInOut,
-    );
-  }
+  // static Route _buildPageRoute(Widget page) {
+  //   return PageTransition(
+  //     type: PageTransitionType.rightToLeft,
+  //     reverseDuration: const Duration(milliseconds: 300),
+  //     duration: const Duration(milliseconds: 300),
+  //     child: page,
+  //     curve: Curves.easeInOut,
+  //   );
+  // }
 
   static Widget _buildUnknownRoutePage() {
     return Scaffold(
