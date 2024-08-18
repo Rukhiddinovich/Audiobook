@@ -5,9 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uic_task/bloc/audiobook_bloc.dart';
-import 'package:uic_task/data/form_status/form_status.dart';
+import 'package:uic_task/data/local/local_database.dart';
 import 'package:uic_task/ui/route/app_route_part.dart';
 import 'package:uic_task/utils/color.dart';
+import 'package:uic_task/utils/constants.dart';
+import 'package:uic_task/utils/form_status.dart';
 import 'package:uic_task/utils/icons.dart';
 
 class AllAudiobooksScreen extends StatelessWidget {
@@ -64,7 +66,7 @@ class AllAudiobooksScreen extends StatelessWidget {
           if (state.status == FormStatus.loading && state.audiobookModel == null) {
             return const Center(child: CircularProgressIndicator.adaptive());
           } else if (state.status == FormStatus.success) {
-            return ListView.builder(
+            return ReorderableListView.builder(
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
               itemCount: state.audiobookModel?.data?.length ?? 0,
@@ -72,6 +74,7 @@ class AllAudiobooksScreen extends StatelessWidget {
                 final audiobook = state.audiobookModel?.data![index];
                 final isPlaying = state.currentIndex == index && state.isPlaying;
                 return Padding(
+                  key: ValueKey(audiobook?.id ?? index),
                   padding: EdgeInsets.only(bottom: 16.h),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -83,6 +86,7 @@ class AllAudiobooksScreen extends StatelessWidget {
                       type: MaterialType.transparency,
                       child: InkWell(
                         onTap: () {
+                          bloc.add(CurrentIndexChangeEvent(index));
                           Navigator.pushNamed(
                             context,
                             RouteNames.audiobookScreen,
@@ -132,12 +136,12 @@ class AllAudiobooksScreen extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     IconButton(
-                                      onPressed: () {
+                                      onPressed: isPlaying ? () {
                                         bloc.add(ToggleVolumeEvent(index));
-                                      },
+                                      } : null,
                                       icon: Icon(
                                         state.volumeByIndex[index] == 0 ? CupertinoIcons.volume_mute : CupertinoIcons.volume_down,
-                                        color: AppColors.white,
+                                        color: isPlaying ? AppColors.white : Colors.grey,
                                         size: 26.r,
                                       ),
                                     ),
@@ -194,6 +198,22 @@ class AllAudiobooksScreen extends StatelessWidget {
                     ),
                   ),
                 );
+              },
+              onReorder: (oldIndex, newIndex) async {
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                  bloc.add(CurrentIndexChangeEvent(newIndex));
+                }else if (oldIndex > newIndex) {
+                  bloc.add(CurrentIndexChangeEvent(newIndex));
+                }
+                myPrint("reorder: $oldIndex $newIndex");
+                final movedItem = state.audiobookModel?.data?.removeAt(oldIndex);
+                if (movedItem != null) {
+                  state.audiobookModel?.data?.insert(newIndex, movedItem);
+                  final prefs = await StorageRepository.getInstance();
+                  final order = state.audiobookModel!.data!.map((a) => a.id.toString()).toList();
+                  await prefs.putList('audiobook_order', order);
+                }
               },
             );
           } else if (state.status == FormStatus.error) {

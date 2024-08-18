@@ -7,6 +7,7 @@ import 'package:uic_task/bloc/audiobook_bloc.dart';
 import 'package:uic_task/data/model/audiobook_model.dart';
 import 'package:uic_task/utils/color.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:uic_task/utils/constants.dart';
 
 class AudiobookScreen extends StatefulWidget {
   const AudiobookScreen({super.key, required this.datum, required this.index});
@@ -21,15 +22,14 @@ class AudiobookScreen extends StatefulWidget {
 class _AudiobookScreenState extends State<AudiobookScreen> {
   @override
   initState() {
-    context
-        .read<AudiobookBloc>()
-        .add(LoadAudioEvent(previewUrl: widget.datum.preview,index: widget.index));
+    myPrint("Index Music ------->${widget.index}");
+    context.read<AudiobookBloc>().add(
+        LoadAudioEvent(previewUrl: widget.datum.preview, index: widget.index));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-
     return BlocBuilder<AudiobookBloc, AudiobookState>(
       builder: (context, state) {
         final datum = state.audiobookModel?.data?[state.currentIndex];
@@ -236,7 +236,8 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                     ),
                                     IconButton(
                                       onPressed: () {
-                                        bloc.add(SkipToNextEvent(id: datum?.id ?? 0));
+                                        bloc.add(SkipToNextEvent(
+                                            id: datum?.id ?? 0));
                                       },
                                       icon: Icon(
                                         CupertinoIcons.chevron_right_circle,

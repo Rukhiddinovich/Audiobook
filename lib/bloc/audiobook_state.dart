@@ -1,6 +1,6 @@
 part of 'audiobook_bloc.dart';
 
-class AudiobookState {
+class AudiobookState extends Equatable {
   final FormStatus status;
   final AudiobookModel? audiobookModel;
   final bool isPlaying;
@@ -9,10 +9,10 @@ class AudiobookState {
   final int currentIndex;
   final Map<int, double> volumeByIndex;
 
-  AudiobookState({
+  const AudiobookState({
     this.status = FormStatus.initial,
     this.audiobookModel,
-    this.currentIndex=0,
+    this.currentIndex=-1,
     this.isPlaying = false,
     this.isShuffleEnabled = false,
     this.errorMessage,
@@ -38,4 +38,15 @@ class AudiobookState {
       volumeByIndex: volumeByIndex ?? this.volumeByIndex,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    status,
+    audiobookModel,
+    isPlaying,
+    isShuffleEnabled,
+    errorMessage,
+    currentIndex,
+    volumeByIndex
+  ];
 }

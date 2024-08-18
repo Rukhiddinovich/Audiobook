@@ -1,21 +1,26 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:uic_task/data/form_status/form_status.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:uic_task/utils/constants.dart';
+import 'package:uic_task/utils/form_status.dart';
 import 'package:uic_task/data/model/audiobook_model.dart';
 import 'package:uic_task/data/repository/api_repository.dart';
 import 'package:uic_task/data/service/api_service.dart';
+
 part 'audiobook_event.dart';
+
 part 'audiobook_state.dart';
 
 class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
   final ApiService apiService = ApiService();
-  final ApiRepository agentsRepository;
+  final ApiRepository apiRepository;
   late final AudioPlayer audioPlayer;
   late ConcatenatingAudioSource playlist;
 
   AudiobookBloc()
-      : agentsRepository = ApiRepository(apiService: ApiService()),
-        super(AudiobookState()) {
+      : apiRepository = ApiRepository(apiService: ApiService()),
+        super(const AudiobookState()) {
     audioPlayer = AudioPlayer();
 
     // Handle player state stream events
@@ -32,7 +37,7 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
     on<GetAudiobooksDataEvent>((event, emit) async {
       emit(state.copyWith(status: FormStatus.loading));
       try {
-        final audiobookModel = await agentsRepository.getAudiobooks();
+        final audiobookModel = await apiRepository.getAudiobooks();
         emit(state.copyWith(
           status: FormStatus.success,
           audiobookModel: audiobookModel,
@@ -48,26 +53,38 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
     // Handle the LoadAudioEvent
     on<LoadAudioEvent>((event, emit) async {
       emit(state.copyWith(
-        status: FormStatus.loading,
         currentIndex: event.index,
-        isPlaying: false, // Reset play status during load
+        isPlaying: false,
       ));
       try {
         final previewUrl = event.previewUrl;
         if (previewUrl == null || previewUrl.isEmpty) {
           throw Exception("Audio preview URL is not available.");
         }
+        myPrint("Loading audio from URL: $previewUrl");
         playlist = ConcatenatingAudioSource(
-          children: [AudioSource.uri(Uri.parse(previewUrl))],
+          children: [
+            AudioSource.uri(
+              Uri.parse(previewUrl),
+              tag: MediaItem(
+                id: state.audiobookModel?.data?[event.index!].id.toString() ?? "",
+                title: state.audiobookModel?.data?[event.index!].title ?? "",
+                artist: state.audiobookModel?.data?[event.index!].artist?.name ?? "",
+                album: state.audiobookModel?.data?[event.index!].album?.title ?? "",
+                artUri: Uri.parse(state.audiobookModel?.data?[event.index!].album?.cover ?? "",),
+                duration: const Duration(minutes: 5),
+              ),
+            ),
+          ],
         );
         await audioPlayer.setAudioSource(playlist);
+        emit(state.copyWith(status: FormStatus.success));
         await audioPlayer.play();
-        emit(state.copyWith(status: FormStatus.success, isPlaying: true));
+        emit(state.copyWith(isPlaying: true));
       } catch (e) {
-        emit(state.copyWith(
-          status: FormStatus.error,
-          errorMessage: e.toString(),
-        ));
+        emit(
+          state.copyWith(status: FormStatus.error, errorMessage: e.toString()),
+        );
       }
     });
 
@@ -81,7 +98,7 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       } else {
         await audioPlayer.play();
         emit(state.copyWith(isPlaying: true));
-            }
+      }
     });
 
     // Handle the SkipToNextEvent
@@ -112,11 +129,13 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       final currentIndex = state.currentIndex;
       if (currentIndex > 0) {
         final previousIndex = currentIndex - 1;
-        final previousPreviewUrl = state.audiobookModel?.data?[previousIndex].preview;
+        final previousPreviewUrl =
+            state.audiobookModel?.data?[previousIndex].preview;
 
         if (previousPreviewUrl != null) {
           await audioPlayer.pause();
-          add(LoadAudioEvent(previewUrl: previousPreviewUrl, index: previousIndex));
+          add(LoadAudioEvent(
+              previewUrl: previousPreviewUrl, index: previousIndex));
         }
       } else {
         await audioPlayer.seek(Duration.zero);
@@ -146,8 +165,20 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       updatedVolumeByIndex[event.index] = newVolume;
       emit(state.copyWith(volumeByIndex: updatedVolumeByIndex));
     });
-  }
 
+    // on<StopAudioEvent>((event,emit)async{
+    //   await audioPlayer.stop();
+    //   emit(state.copyWith(isPlaying: false));
+    // });
+
+    on<UpdateAudiobookModelEvent>((event, emit) async {
+      emit(state.copyWith(audiobookModel: event.audiobookModel));
+    });
+
+    on<CurrentIndexChangeEvent>((event, emit) async {
+      emit(state.copyWith(currentIndex: event.index));
+    });
+  }
 
   @override
   Future<void> close() {
