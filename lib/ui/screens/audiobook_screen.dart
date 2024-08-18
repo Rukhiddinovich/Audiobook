@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,9 +11,13 @@ import 'package:rxdart/rxdart.dart';
 import 'package:uic_task/utils/constants.dart';
 
 class AudiobookScreen extends StatefulWidget {
-  const AudiobookScreen({super.key, required this.datum, required this.index});
+  const AudiobookScreen({
+    super.key,
+    required this.datum,
+    required this.index,
+  });
 
-  final Datum datum;
+  final DataAudiobookModel datum;
   final int index;
 
   @override
@@ -33,6 +38,7 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
     return BlocBuilder<AudiobookBloc, AudiobookState>(
       builder: (context, state) {
         final datum = state.audiobookModel?.data?[state.currentIndex];
+        final audiobook = state.audiobookModel?.data?[state.currentIndex];
         final bloc = context.read<AudiobookBloc>();
         return Scaffold(
           backgroundColor: AppColors.primaryColor,
@@ -64,8 +70,8 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                   padding: EdgeInsets.only(top: 30.h),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16.r),
-                    child: Image.network(
-                      datum?.artist?.pictureMedium ?? "Unknown image",
+                    child: CachedNetworkImage(
+                      imageUrl: datum?.artist?.pictureMedium ?? "Unknown image",
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
@@ -126,9 +132,6 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                   positionData?.position ?? Duration.zero;
                               final duration =
                                   positionData?.duration ?? Duration.zero;
-                              final bufferedPosition =
-                                  positionData?.bufferedPosition ??
-                                      Duration.zero;
 
                               return Column(
                                 children: [
@@ -148,26 +151,30 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                           milliseconds: value.toInt()));
                                     },
                                   ),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        formatDuration(position),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 12.sp,
-                                          color: AppColors.c9292A2,
+                                  Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 24.w),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          formatDuration(position),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12.sp,
+                                            color: AppColors.c9292A2,
+                                          ),
                                         ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        formatDuration(duration),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 12.sp,
-                                          color: AppColors.c9292A2,
+                                        const Spacer(),
+                                        Text(
+                                          formatDuration(duration),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12.sp,
+                                            color: AppColors.c9292A2,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               );
@@ -249,11 +256,19 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                 ),
                               ),
                               IconButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  if (audiobook != null) {
+                                    context
+                                        .read<AudiobookBloc>()
+                                        .add(SaveDownloadedAudiobookEvent(
+                                          dataAudiobookModel: audiobook,
+                                        ));
+                                  }
+                                },
                                 icon: Icon(
                                   CupertinoIcons.square_arrow_down,
-                                  size: 30.r,
                                   color: AppColors.white,
+                                  size: 30.r,
                                 ),
                               ),
                             ],

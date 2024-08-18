@@ -41,11 +41,6 @@ class ToggleShuffleEvent extends AudiobookEvent {
   List<Object?> get props => [];
 }
 
-class DisposeEvent extends AudiobookEvent {
-  @override
-  List<Object?> get props => [];
-}
-
 class StreamPlayerEvent extends AudiobookEvent {
   final bool isPlaying;
 
@@ -64,11 +59,6 @@ class ToggleVolumeEvent extends AudiobookEvent {
   List<Object?> get props => [index];
 }
 
-class StopAudioEvent extends AudiobookEvent {
-  @override
-  List<Object> get props => [];
-}
-
 class CurrentIndexChangeEvent extends AudiobookEvent {
   final int index;
 
@@ -78,12 +68,15 @@ class CurrentIndexChangeEvent extends AudiobookEvent {
   List<Object?> get props => [index];
 }
 
-
-class UpdateAudiobookModelEvent extends AudiobookEvent {
-  final AudiobookModel audiobookModel;
-
-  UpdateAudiobookModelEvent(this.audiobookModel);
+class SaveDownloadedAudiobookEvent extends AudiobookEvent {
+  final DataAudiobookModel dataAudiobookModel;
+  SaveDownloadedAudiobookEvent({required this.dataAudiobookModel});
 
   @override
-  List<Object?> get props => [audiobookModel];
+  List<Object> get props => [dataAudiobookModel];
+}
+
+class GetDownloadedAudiobooksEvent extends AudiobookEvent {
+  @override
+  List<Object> get props => [];
 }

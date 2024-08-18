@@ -8,8 +8,9 @@ class ApiService {
       baseUrl: mainBaseUrl,
       headers: {
         'Content-Type': 'application/json',
-        'x-rapidapi-key':'30594dab10mshc46d27ffca40c79p1fcf71jsn1c313ee34c07',
+        'x-rapidapi-key': '30594dab10mshc46d27ffca40c79p1fcf71jsn1c313ee34c07',
       },
+      // Uncomment the following lines if you need to set timeout durations
       // connectTimeout: Duration(seconds: TimeOutConstants.connectTimeout),
       // sendTimeout: Duration(seconds: TimeOutConstants.connectTimeout),
       // receiveTimeout: Duration(seconds: TimeOutConstants.connectTimeout),
@@ -23,16 +24,16 @@ class ApiService {
   void _init() {
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onError: (error, handler) {
+        onError: (DioException error, handler) {
           print("ERROR GA KIRDI ------> : ${error.message} and ${error.response}");
           return handler.next(error);
         },
-        onRequest: (requestOptions, handler) {
+        onRequest: (RequestOptions requestOptions, handler) {
           print("SO'ROV JO'NATILDI ------> : ${requestOptions.path}");
           return handler.next(requestOptions);
         },
-        onResponse: (response, handler) {
-          print("RESPONSE JO'NATILDI ------> : ${response.requestOptions.path}");
+        onResponse: (Response response, handler) {
+          print("RESPONSE QABUL QILINDI ------> : ${response.requestOptions.path}");
           return handler.next(response);
         },
       ),
@@ -42,49 +43,51 @@ class ApiService {
   Future<AudiobookModel> getAudiobooks() async {
     try {
       final response = await _dio.get("https://deezerdevs-deezer.p.rapidapi.com/search?q=eminem");
+      myPrint("Response -----------> $response.data");
       if (response.statusCode! >= 200 && response.statusCode! < 300) {
         return AudiobookModel.fromJson(response.data);
       } else {
         throw Exception("Error: ${response.statusCode} - ${response.data}");
       }
     } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(
-            "Dio Error - Status: ${e.response?.statusCode}, Data: ${e.response?.data}");
-      } else {
-        throw Exception("Dio Error - Message: ${e.message}");
+      String errorMessage;
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+          errorMessage = "Connection Timeout Error: ${e.message}";
+          break;
+        case DioExceptionType.sendTimeout:
+          errorMessage = "Send Timeout Error: ${e.message}";
+          break;
+        case DioExceptionType.receiveTimeout:
+          errorMessage = "Receive Timeout Error: ${e.message}";
+          break;
+        case DioExceptionType.badResponse:
+          errorMessage = "Bad Response - Status: ${e.response?.statusCode}, Data: ${e.response?.data}";
+          break;
+        case DioExceptionType.cancel:
+          errorMessage = "Request Cancelled: ${e.message}";
+          break;
+        case DioExceptionType.unknown:
+          errorMessage = "Unknown Error: ${e.message}";
+          break;
+        default:
+          errorMessage = "Unexpected Dio Error: ${e.message}";
       }
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception("Unexpected Error: $e");
     }
   }
 
-  // Future<AudiobookModel> getAudiobooks({int offset = 0, int limit = 10}) async {
-  //   try {
-  //     final response = await _dio.get(
-  //       "$mainBaseUrl/search/",
-  //       queryParameters: {
-  //         'q': 'Travis+Scot',
-  //         'type': 'multi',
-  //         'offset': offset,
-  //         'limit': limit,
-  //         'numberOfTopResults': 5,
-  //       },
-  //     );
-  //     if (response.statusCode! >= 200 && response.statusCode! < 300) {
-  //       return AudiobookModel.fromJson(response.data);
-  //     } else {
-  //       throw Exception("Error: ${response.statusCode} - ${response.data}");
-  //     }
-  //   } on DioException catch (e) {
-  //     if (e.response != null) {
-  //       throw Exception(
-  //           "Dio Error - Status: ${e.response?.statusCode}, Data: ${e.response?.data}");
-  //     } else {
-  //       throw Exception("Dio Error - Message: ${e.message}");
-  //     }
-  //   } catch (e) {
-  //     throw Exception("Unexpected Error: $e");
-  //   }
-  // }
+
+
+
+  Future<AudiobookModel> fetchAudiobooksFromApi() async {
+    final response = await Dio().get('https://deezerdevs-deezer.p.rapidapi.com/search?q=eminem');
+    if (response.statusCode == 200) {
+      return AudiobookModel.fromJson(response.data);
+    } else {
+      throw Exception('Failed to load audiobooks');
+    }
+  }
 }

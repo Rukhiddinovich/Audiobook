@@ -9,4 +9,8 @@ class ApiRepository {
   Future<AudiobookModel> getAudiobooks() async {
     return apiService.getAudiobooks();
   }
+
+  Future<AudiobookModel> fetchAudiobooksFromApi() async {
+    return apiService.fetchAudiobooksFromApi();
+  }
 }

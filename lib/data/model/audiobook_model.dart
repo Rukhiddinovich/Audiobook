@@ -1,5 +1,5 @@
 class AudiobookModel {
-  List<Datum>? data;
+  List<DataAudiobookModel>? data;
   int? total;
   String? next;
 
@@ -10,7 +10,7 @@ class AudiobookModel {
   });
 
   AudiobookModel copyWith({
-    List<Datum>? data,
+    List<DataAudiobookModel>? data,
     int? total,
     String? next,
   }) =>
@@ -21,7 +21,7 @@ class AudiobookModel {
       );
 
   factory AudiobookModel.fromJson(Map<String, dynamic> json) => AudiobookModel(
-    data: json["data"] == null ? null : List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+    data: json["data"] == null ? null : List<DataAudiobookModel>.from(json["data"].map((x) => DataAudiobookModel.fromJson(x))),
     total: json["total"],
     next: json["next"],
   );
@@ -33,7 +33,7 @@ class AudiobookModel {
   };
 }
 
-class Datum {
+class DataAudiobookModel {
   int? id;
   bool? readable;
   String? title;
@@ -47,11 +47,11 @@ class Datum {
   int? explicitContentCover;
   String? preview;
   String? md5Image;
-  Artist? artist;
-  Album? album;
+  ArtistAudiobookModel? artist;
+  AlbumAudiobookModel? album;
   String? type;
 
-  Datum({
+  DataAudiobookModel({
     this.id,
     this.readable,
     this.title,
@@ -70,7 +70,7 @@ class Datum {
     this.type,
   });
 
-  Datum copyWith({
+  DataAudiobookModel copyWith({
     int? id,
     bool? readable,
     String? title,
@@ -84,11 +84,11 @@ class Datum {
     int? explicitContentCover,
     String? preview,
     String? md5Image,
-    Artist? artist,
-    Album? album,
+    ArtistAudiobookModel? artist,
+    AlbumAudiobookModel? album,
     String? type,
   }) =>
-      Datum(
+      DataAudiobookModel(
         id: id ?? this.id,
         readable: readable ?? this.readable,
         title: title ?? this.title,
@@ -107,7 +107,7 @@ class Datum {
         type: type ?? this.type,
       );
 
-  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+  factory DataAudiobookModel.fromJson(Map<String, dynamic> json) => DataAudiobookModel(
     id: json["id"],
     readable: json["readable"],
     title: json["title"],
@@ -121,8 +121,8 @@ class Datum {
     explicitContentCover: json["explicit_content_cover"],
     preview: json["preview"],
     md5Image: json["md5_image"],
-    artist: json["artist"] != null ? Artist.fromJson(json["artist"]) : null,
-    album: json["album"] != null ? Album.fromJson(json["album"]) : null,
+    artist: json["artist"] != null ? ArtistAudiobookModel.fromJson(json["artist"]) : null,
+    album: json["album"] != null ? AlbumAudiobookModel.fromJson(json["album"]) : null,
     type: json["type"],
   );
 
@@ -146,7 +146,7 @@ class Datum {
   };
 }
 
-class Album {
+class AlbumAudiobookModel {
   int? id;
   String? title;
   String? cover;
@@ -158,7 +158,7 @@ class Album {
   String? tracklist;
   String? type;
 
-  Album({
+  AlbumAudiobookModel({
     this.id,
     this.title,
     this.cover,
@@ -171,7 +171,7 @@ class Album {
     this.type,
   });
 
-  Album copyWith({
+  AlbumAudiobookModel copyWith({
     int? id,
     String? title,
     String? cover,
@@ -183,7 +183,7 @@ class Album {
     String? tracklist,
     String? type,
   }) =>
-      Album(
+      AlbumAudiobookModel(
         id: id ?? this.id,
         title: title ?? this.title,
         cover: cover ?? this.cover,
@@ -196,7 +196,7 @@ class Album {
         type: type ?? this.type,
       );
 
-  factory Album.fromJson(Map<String, dynamic> json) => Album(
+  factory AlbumAudiobookModel.fromJson(Map<String, dynamic> json) => AlbumAudiobookModel(
     id: json["id"],
     title: json["title"],
     cover: json["cover"],
@@ -223,7 +223,7 @@ class Album {
   };
 }
 
-class Artist {
+class ArtistAudiobookModel {
   int? id;
   String? name;
   String? link;
@@ -235,7 +235,7 @@ class Artist {
   String? tracklist;
   String? type;
 
-  Artist({
+  ArtistAudiobookModel({
     this.id,
     this.name,
     this.link,
@@ -248,7 +248,7 @@ class Artist {
     this.type,
   });
 
-  Artist copyWith({
+  ArtistAudiobookModel copyWith({
     int? id,
     String? name,
     String? link,
@@ -260,7 +260,7 @@ class Artist {
     String? tracklist,
     String? type,
   }) =>
-      Artist(
+      ArtistAudiobookModel(
         id: id ?? this.id,
         name: name ?? this.name,
         link: link ?? this.link,
@@ -273,7 +273,7 @@ class Artist {
         type: type ?? this.type,
       );
 
-  factory Artist.fromJson(Map<String, dynamic> json) => Artist(
+  factory ArtistAudiobookModel.fromJson(Map<String, dynamic> json) => ArtistAudiobookModel(
     id: json["id"],
     name: json["name"],
     link: json["link"],

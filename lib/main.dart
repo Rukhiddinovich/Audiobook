@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:uic_task/bloc/audiobook_bloc.dart';
+import 'package:uic_task/cubit/connectivity_cubit.dart';
 import 'package:uic_task/data/local/local_database.dart';
 import 'package:uic_task/ui/route/app_route_part.dart';
 import 'package:uic_task/utils/color.dart';
@@ -24,7 +25,10 @@ Future<void> main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => AudiobookBloc()..add(GetAudiobooksDataEvent()),
+          create: (context) => AudiobookBloc(connectivityCubit: ConnectivityCubit()),
+        ),
+        BlocProvider(
+          create: (context) => ConnectivityCubit(),
         ),
       ],
       child: const MainApp(),

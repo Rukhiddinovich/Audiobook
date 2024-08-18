@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uic_task/cubit/connectivity_cubit.dart';
 import 'package:uic_task/utils/constants.dart';
 import 'package:uic_task/utils/form_status.dart';
 import 'package:uic_task/data/model/audiobook_model.dart';
@@ -15,25 +21,24 @@ part 'audiobook_state.dart';
 class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
   final ApiService apiService = ApiService();
   final ApiRepository apiRepository;
+  final ConnectivityCubit connectivityCubit;
   late final AudioPlayer audioPlayer;
   late ConcatenatingAudioSource playlist;
 
-  AudiobookBloc()
-      : apiRepository = ApiRepository(apiService: ApiService()),
+  AudiobookBloc({
+    required this.connectivityCubit,
+  })  : apiRepository = ApiRepository(apiService: ApiService()),
         super(const AudiobookState()) {
     audioPlayer = AudioPlayer();
 
-    // Handle player state stream events
     audioPlayer.playerStateStream.listen((event) {
       add(StreamPlayerEvent(isPlaying: event.playing));
     });
 
-    // Handle stream player event
     on<StreamPlayerEvent>((event, emit) {
       emit(state.copyWith(isPlaying: event.isPlaying));
     });
 
-    // Handle the GetAudiobooksDataEvent
     on<GetAudiobooksDataEvent>((event, emit) async {
       emit(state.copyWith(status: FormStatus.loading));
       try {
@@ -50,7 +55,84 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       }
     });
 
-    // Handle the LoadAudioEvent
+    on<GetDownloadedAudiobooksEvent>((event, emit) async {
+      try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String>? audiobookJsonList =
+            prefs.getStringList('downloaded_audiobooks') ?? [];
+        if (audiobookJsonList.isNotEmpty) {
+          List<DataAudiobookModel> listDataAudiobookModel = [];
+          for (String jsonStr in audiobookJsonList) {
+            DataAudiobookModel dataAudiobookModel =
+                DataAudiobookModel.fromJson(jsonDecode(jsonStr));
+            listDataAudiobookModel.add(dataAudiobookModel);
+          }
+          AudiobookModel audiobookModel =
+              AudiobookModel(data: listDataAudiobookModel);
+          myPrint("listDataAudiobookModel: -----------> $listDataAudiobookModel");
+          emit(state.copyWith(
+            status: FormStatus.success,
+            audiobookModel: audiobookModel,
+          ));
+        } else {
+          emit(
+              state.copyWith(status: FormStatus.success, audiobookModel: null));
+        }
+      } catch (e) {
+        emit(state.copyWith(
+          status: FormStatus.error,
+          errorMessage: e.toString(),
+        ));
+      }
+    });
+
+    on<SaveDownloadedAudiobookEvent>((event, emit) async {
+      try {
+        if (audioPlayer.playing) {
+          await audioPlayer.pause();
+        }
+        Directory appDocDir = await getApplicationDocumentsDirectory();
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String>? audiobookJsonList =
+            prefs.getStringList('downloaded_audiobooks') ?? [];
+        myPrint("audiobookJsonList: -----------> $audiobookJsonList");
+        String appDocPath = appDocDir.path;
+        String fileName = '${event.dataAudiobookModel.title}.mp3';
+        String filePath = '$appDocPath/$fileName';
+        Dio dio = Dio();
+        List<DataAudiobookModel> combinedData = [];
+        for (String jsonStr in audiobookJsonList) {
+          DataAudiobookModel dataAudiobookModel =
+              DataAudiobookModel.fromJson(jsonDecode(jsonStr));
+          combinedData.add(dataAudiobookModel);
+        }
+        if (combinedData
+            .any((element) => element.id == event.dataAudiobookModel.id)) {
+          myPrint("${event.dataAudiobookModel.title} <--------- Already downloaded!");
+          emit(state.copyWith(status: FormStatus.success));
+          return;
+        } else {
+          await dio.download(event.dataAudiobookModel.preview!, filePath);
+          DataAudiobookModel updatedAudiobook =
+              event.dataAudiobookModel.copyWith(
+            preview: filePath,
+          );
+          List<String>? listDownloadedAudiobooks =
+              prefs.getStringList('downloaded_audiobooks') ?? [];
+          listDownloadedAudiobooks.add(jsonEncode(updatedAudiobook.toJson()));
+          await prefs.setStringList(
+              'downloaded_audiobooks', listDownloadedAudiobooks);
+          myPrint('${updatedAudiobook.title} <--------- has been downloaded!');
+          emit(state.copyWith(status: FormStatus.success));
+        }
+      } catch (e) {
+        emit(state.copyWith(
+          status: FormStatus.error,
+          errorMessage: e.toString(),
+        ));
+      }
+    });
+
     on<LoadAudioEvent>((event, emit) async {
       emit(state.copyWith(
         currentIndex: event.index,
@@ -67,11 +149,17 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
             AudioSource.uri(
               Uri.parse(previewUrl),
               tag: MediaItem(
-                id: state.audiobookModel?.data?[event.index!].id.toString() ?? "",
+                id: state.audiobookModel?.data?[event.index!].id.toString() ??
+                    "",
                 title: state.audiobookModel?.data?[event.index!].title ?? "",
-                artist: state.audiobookModel?.data?[event.index!].artist?.name ?? "",
-                album: state.audiobookModel?.data?[event.index!].album?.title ?? "",
-                artUri: Uri.parse(state.audiobookModel?.data?[event.index!].album?.cover ?? "",),
+                artist:
+                    state.audiobookModel?.data?[event.index!].artist?.name ??
+                        "",
+                album: state.audiobookModel?.data?[event.index!].album?.title ??
+                    "",
+                artUri: Uri.parse(
+                  state.audiobookModel?.data?[event.index!].album?.cover ?? "",
+                ),
                 duration: const Duration(minutes: 5),
               ),
             ),
@@ -88,10 +176,8 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       }
     });
 
-    // Handle the PlayPauseEvent
     on<PlayPauseEvent>((event, emit) async {
       final isPlaying = audioPlayer.playing;
-
       if (isPlaying) {
         await audioPlayer.pause();
         emit(state.copyWith(isPlaying: false));
@@ -101,22 +187,18 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       }
     });
 
-    // Handle the SkipToNextEvent
     on<SkipToNextEvent>((event, emit) async {
       final currentIndex = state.currentIndex;
       final totalItems = state.audiobookModel?.data?.length ?? 0;
-
       if (currentIndex < totalItems - 1) {
         final nextIndex = currentIndex + 1;
         final nextPreviewUrl = state.audiobookModel?.data?[nextIndex].preview;
-
         if (nextPreviewUrl != null) {
           await audioPlayer.pause();
           add(LoadAudioEvent(previewUrl: nextPreviewUrl, index: nextIndex));
         }
       } else {
         final firstPreviewUrl = state.audiobookModel?.data?.first.preview;
-
         if (firstPreviewUrl != null) {
           await audioPlayer.pause();
           add(LoadAudioEvent(previewUrl: firstPreviewUrl, index: 0));
@@ -124,7 +206,6 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       }
     });
 
-    // Handle the SkipToPreviousEvent
     on<SkipToPreviousEvent>((event, emit) async {
       final currentIndex = state.currentIndex;
       if (currentIndex > 0) {
@@ -142,19 +223,13 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       }
     });
 
-    // Handle the ToggleShuffleEvent
     on<ToggleShuffleEvent>((event, emit) async {
       final enableShuffle = !audioPlayer.shuffleModeEnabled;
       await audioPlayer.setShuffleModeEnabled(enableShuffle);
       emit(state.copyWith(isShuffleEnabled: enableShuffle));
     });
 
-    // Handle the DisposeEvent
-    on<DisposeEvent>((event, emit) {
-      audioPlayer.dispose();
-    });
 
-    // Handle the ToggleVolumeEvent
     on<ToggleVolumeEvent>((event, emit) async {
       final currentVolume = state.volumeByIndex[event.index] ?? 1.0;
       final newVolume = currentVolume > 0 ? 0.0 : 1.0;
@@ -164,15 +239,6 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
       final updatedVolumeByIndex = Map<int, double>.from(state.volumeByIndex);
       updatedVolumeByIndex[event.index] = newVolume;
       emit(state.copyWith(volumeByIndex: updatedVolumeByIndex));
-    });
-
-    // on<StopAudioEvent>((event,emit)async{
-    //   await audioPlayer.stop();
-    //   emit(state.copyWith(isPlaying: false));
-    // });
-
-    on<UpdateAudiobookModelEvent>((event, emit) async {
-      emit(state.copyWith(audiobookModel: event.audiobookModel));
     });
 
     on<CurrentIndexChangeEvent>((event, emit) async {

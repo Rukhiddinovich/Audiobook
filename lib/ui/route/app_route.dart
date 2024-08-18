@@ -13,11 +13,11 @@ class AppRoutes {
         return CupertinoPageRoute(builder: (context) => const SplashScreen());
       case RouteNames.allAudiobooksScreen:
         return CupertinoPageRoute(
-            builder: (context) => const AllAudiobooksScreen());
+            builder: (context) => AllAudiobooksScreen(isConnect: settings.arguments as bool,));
       case RouteNames.audiobookScreen:
         return CupertinoPageRoute(
           builder: (context) => AudiobookScreen(
-            datum: (settings.arguments as List)[0] as Datum,
+            datum: (settings.arguments as List)[0] as DataAudiobookModel,
             index: (settings.arguments as List)[1] as int,
           ),
         );
