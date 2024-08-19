@@ -69,7 +69,7 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
           }
           AudiobookModel audiobookModel =
               AudiobookModel(data: listDataAudiobookModel);
-          myPrint("listDataAudiobookModel: -----------> $listDataAudiobookModel");
+          myPrint("saveListDataAudiobookModel: -----------> $listDataAudiobookModel");
           emit(state.copyWith(
             status: FormStatus.success,
             audiobookModel: audiobookModel,
@@ -100,13 +100,13 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
         String fileName = '${event.dataAudiobookModel.title}.mp3';
         String filePath = '$appDocPath/$fileName';
         Dio dio = Dio();
-        List<DataAudiobookModel> combinedData = [];
+        List<DataAudiobookModel> saveListDataAudiobookModel = [];
         for (String jsonStr in audiobookJsonList) {
           DataAudiobookModel dataAudiobookModel =
               DataAudiobookModel.fromJson(jsonDecode(jsonStr));
-          combinedData.add(dataAudiobookModel);
+          saveListDataAudiobookModel.add(dataAudiobookModel);
         }
-        if (combinedData
+        if (saveListDataAudiobookModel
             .any((element) => element.id == event.dataAudiobookModel.id)) {
           myPrint("${event.dataAudiobookModel.title} <--------- Already downloaded!");
           emit(state.copyWith(status: FormStatus.success));
@@ -225,32 +225,29 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
 
     on<ToggleShuffleEvent>((event, emit) async {
       final currentMode = state.playbackMode;
-      final currentShuffleType = state.shuffleType;
-
       PlaybackMode newMode;
       ShuffleType newShuffleType;
-
       switch (currentMode) {
         case PlaybackMode.shuffle:
           newMode = PlaybackMode.repeatAll;
           newShuffleType = ShuffleType.off;
-          await audioPlayer.setShuffleModeEnabled(false);
-          await audioPlayer.setLoopMode(LoopMode.all);
+          await audioPlayer.setShuffleModeEnabled(true);
           break;
         case PlaybackMode.repeatAll:
           newMode = PlaybackMode.repeatSingle;
           newShuffleType = ShuffleType.all;
-          await audioPlayer.setLoopMode(LoopMode.one);
           break;
         case PlaybackMode.repeatSingle:
+          newMode = PlaybackMode.shuffle;
+          newShuffleType = ShuffleType.one;
+          await audioPlayer.setShuffleModeEnabled(true);
+          break;
         default:
           newMode = PlaybackMode.shuffle;
           newShuffleType = ShuffleType.one;
           await audioPlayer.setShuffleModeEnabled(true);
-          await audioPlayer.setLoopMode(LoopMode.all);
           break;
       }
-
       emit(state.copyWith(
         playbackMode: newMode,
         shuffleType: newShuffleType,

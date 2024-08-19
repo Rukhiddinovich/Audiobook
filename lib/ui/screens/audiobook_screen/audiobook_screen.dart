@@ -148,6 +148,11 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                 ),
                                 IconButtonWidgets(
                                   onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("Downloading...${audiobook?.title}"),
+                                      ),
+                                    );
                                     if (audiobook != null) {
                                       context
                                           .read<AudiobookBloc>()
@@ -155,6 +160,11 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                         dataAudiobookModel: audiobook,
                                       ));
                                     }
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("Downloading...${audiobook?.title}"),
+                                      ),
+                                    );
                                   },
                                   icon: CupertinoIcons.tray_arrow_down,
                                 ),

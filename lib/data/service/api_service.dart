@@ -10,10 +10,6 @@ class ApiService {
         'Content-Type': 'application/json',
         'x-rapidapi-key': '30594dab10mshc46d27ffca40c79p1fcf71jsn1c313ee34c07',
       },
-      // Uncomment the following lines if you need to set timeout durations
-      // connectTimeout: Duration(seconds: TimeOutConstants.connectTimeout),
-      // sendTimeout: Duration(seconds: TimeOutConstants.connectTimeout),
-      // receiveTimeout: Duration(seconds: TimeOutConstants.connectTimeout),
     ),
   );
 
@@ -25,7 +21,8 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (DioException error, handler) {
-          myPrint("ERROR GA KIRDI ------> : ${error.message} and ${error.response}");
+          myPrint(
+              "ERROR GA KIRDI ------> : ${error.message} and ${error.response}");
           return handler.next(error);
         },
         onRequest: (RequestOptions requestOptions, handler) {
@@ -33,7 +30,8 @@ class ApiService {
           return handler.next(requestOptions);
         },
         onResponse: (Response response, handler) {
-          myPrint("RESPONSE QABUL QILINDI ------> : ${response.requestOptions.path}");
+          myPrint(
+              "RESPONSE QABUL QILINDI ------> : ${response.requestOptions.path}");
           return handler.next(response);
         },
       ),
@@ -42,7 +40,8 @@ class ApiService {
 
   Future<AudiobookModel> getAudiobooks() async {
     try {
-      final response = await _dio.get("https://deezerdevs-deezer.p.rapidapi.com/search?q=eminem");
+      final response = await _dio
+          .get("https://deezerdevs-deezer.p.rapidapi.com/search?q=eminem");
       myPrint("Response -----------> $response.data");
       if (response.statusCode! >= 200 && response.statusCode! < 300) {
         return AudiobookModel.fromJson(response.data);
@@ -62,7 +61,8 @@ class ApiService {
           errorMessage = "Receive Timeout Error: ${e.message}";
           break;
         case DioExceptionType.badResponse:
-          errorMessage = "Bad Response - Status: ${e.response?.statusCode}, Data: ${e.response?.data}";
+          errorMessage =
+              "Bad Response - Status: ${e.response?.statusCode}, Data: ${e.response?.data}";
           break;
         case DioExceptionType.cancel:
           errorMessage = "Request Cancelled: ${e.message}";

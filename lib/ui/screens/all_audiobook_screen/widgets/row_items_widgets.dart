@@ -25,11 +25,6 @@ class RowItemsWidgets extends StatelessWidget {
           fit: BoxFit.cover,
           width: 100.w,
           height: 80.h,
-          errorWidget: (context, error, stackTrace) => Container(
-            width: 100.w,
-            height: 80.h,
-            color: AppColors.c1C1C4D,
-          ),
           imageUrl: imageUrl,
         ),
       ),

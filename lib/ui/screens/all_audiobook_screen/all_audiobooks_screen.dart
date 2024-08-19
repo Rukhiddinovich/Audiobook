@@ -148,7 +148,7 @@ class _AllAudiobooksScreenState extends State<AllAudiobooksScreen> {
                       border: Border.all(color: Colors.white, width: 1.w),
                       image: DecorationImage(
                         image: CachedNetworkImageProvider(
-                          audiobook?.artist?.pictureXl ?? "",
+                          audiobook?.artist?.pictureBig ?? "",
                         ),
                         fit: BoxFit.cover,
                         opacity: 0.7,
@@ -160,7 +160,7 @@ class _AllAudiobooksScreenState extends State<AllAudiobooksScreen> {
                       type: MaterialType.transparency,
                       child: InkWell(
                         onTap: () {
-                          context.read<AudiobookBloc>().add(CurrentIndexChangeEvent(index));
+                          bloc.add(CurrentIndexChangeEvent(index));
                           Navigator.pushNamed(
                             context,
                             RouteNames.audiobookScreen,
@@ -184,23 +184,33 @@ class _AllAudiobooksScreenState extends State<AllAudiobooksScreen> {
                                 downloadIcon: CupertinoIcons.tray_arrow_down,
                                 onTap: () {
                                   if (state.currentIndex == index) {
-                                    context.read<AudiobookBloc>().add(PlayPauseEvent());
+                                    bloc.add(PlayPauseEvent());
                                   } else {
-                                    context.read<AudiobookBloc>().add(LoadAudioEvent(
+                                    bloc.add(LoadAudioEvent(
                                       previewUrl: audiobook?.preview,
                                       index: index,
                                     ));
                                   }
                                 },
                                 volumeOnPressed: isPlaying ? () {
-                                  context.read<AudiobookBloc>().add(ToggleVolumeEvent(index));
+                                  bloc.add(ToggleVolumeEvent(index));
                                 } : null,
                                 downloadOnPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Downloading...${audiobook?.title}"),
+                                    ),
+                                  );
                                   if (audiobook != null) {
-                                    context.read<AudiobookBloc>().add(SaveDownloadedAudiobookEvent(
+                                    bloc.add(SaveDownloadedAudiobookEvent(
                                       dataAudiobookModel: audiobook,
                                     ));
                                   }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Downloaded! ${audiobook?.title}"),
+                                    ),
+                                  );
                                 },
                               ),
                             ],
@@ -221,8 +231,9 @@ class _AllAudiobooksScreenState extends State<AllAudiobooksScreen> {
                   final order = state.audiobookModel!.data!.map((a) => a.id.toString()).toList();
                   await prefs.setStringList('audiobook_order', order);
                   if (isPlayingCurrentItem) {
-                    context.read<AudiobookBloc>().add(CurrentIndexChangeEvent(newIndex));
+                    bloc.add(CurrentIndexChangeEvent(newIndex));
                   }
+                  myPrint("CurrentIndex--------> ${state.currentIndex}");
                 }
               },
             );
