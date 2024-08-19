@@ -25,15 +25,15 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (DioException error, handler) {
-          print("ERROR GA KIRDI ------> : ${error.message} and ${error.response}");
+          myPrint("ERROR GA KIRDI ------> : ${error.message} and ${error.response}");
           return handler.next(error);
         },
         onRequest: (RequestOptions requestOptions, handler) {
-          print("SO'ROV JO'NATILDI ------> : ${requestOptions.path}");
+          myPrint("SO'ROV JO'NATILDI ------> : ${requestOptions.path}");
           return handler.next(requestOptions);
         },
         onResponse: (Response response, handler) {
-          print("RESPONSE QABUL QILINDI ------> : ${response.requestOptions.path}");
+          myPrint("RESPONSE QABUL QILINDI ------> : ${response.requestOptions.path}");
           return handler.next(response);
         },
       ),
@@ -76,18 +76,6 @@ class ApiService {
       throw Exception(errorMessage);
     } catch (e) {
       throw Exception("Unexpected Error: $e");
-    }
-  }
-
-
-
-
-  Future<AudiobookModel> fetchAudiobooksFromApi() async {
-    final response = await Dio().get('https://deezerdevs-deezer.p.rapidapi.com/search?q=eminem');
-    if (response.statusCode == 200) {
-      return AudiobookModel.fromJson(response.data);
-    } else {
-      throw Exception('Failed to load audiobooks');
     }
   }
 }

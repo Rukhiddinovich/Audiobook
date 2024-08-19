@@ -1,5 +1,15 @@
 part of 'audiobook_bloc.dart';
 
+
+enum PlaybackMode {
+  shuffle,
+  repeatAll,
+  repeatSingle,
+}
+
+enum ShuffleType { off, all, one }
+
+
 class AudiobookState extends Equatable {
   final FormStatus status;
   final AudiobookModel? audiobookModel;
@@ -9,6 +19,8 @@ class AudiobookState extends Equatable {
   final String? errorMessage;
   final int currentIndex;
   final Map<int, double> volumeByIndex;
+  final PlaybackMode playbackMode;
+  final ShuffleType shuffleType;
 
   const AudiobookState({
     this.status = FormStatus.initial,
@@ -19,6 +31,8 @@ class AudiobookState extends Equatable {
     this.isShuffleEnabled = false,
     this.errorMessage,
     this.volumeByIndex = const {},
+    this.playbackMode = PlaybackMode.repeatAll,
+    this.shuffleType = ShuffleType.off,
   });
 
   AudiobookState copyWith({
@@ -30,6 +44,8 @@ class AudiobookState extends Equatable {
     String? errorMessage,
     int? currentIndex,
     Map<int, double>? volumeByIndex,
+    PlaybackMode? playbackMode,
+    ShuffleType? shuffleType,
   }) {
     return AudiobookState(
       status: status ?? this.status,
@@ -40,6 +56,8 @@ class AudiobookState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       currentIndex: currentIndex ?? this.currentIndex,
       volumeByIndex: volumeByIndex ?? this.volumeByIndex,
+      playbackMode: playbackMode ?? this.playbackMode,
+      shuffleType: shuffleType ?? this.shuffleType,
     );
   }
 
@@ -52,6 +70,8 @@ class AudiobookState extends Equatable {
     isShuffleEnabled,
     errorMessage,
     currentIndex,
-    volumeByIndex
+    volumeByIndex,
+    playbackMode,
+    shuffleType,
   ];
 }

@@ -224,11 +224,38 @@ class AudiobookBloc extends Bloc<AudiobookEvent, AudiobookState> {
     });
 
     on<ToggleShuffleEvent>((event, emit) async {
-      final enableShuffle = !audioPlayer.shuffleModeEnabled;
-      await audioPlayer.setShuffleModeEnabled(enableShuffle);
-      emit(state.copyWith(isShuffleEnabled: enableShuffle));
-    });
+      final currentMode = state.playbackMode;
+      final currentShuffleType = state.shuffleType;
 
+      PlaybackMode newMode;
+      ShuffleType newShuffleType;
+
+      switch (currentMode) {
+        case PlaybackMode.shuffle:
+          newMode = PlaybackMode.repeatAll;
+          newShuffleType = ShuffleType.off;
+          await audioPlayer.setShuffleModeEnabled(false);
+          await audioPlayer.setLoopMode(LoopMode.all);
+          break;
+        case PlaybackMode.repeatAll:
+          newMode = PlaybackMode.repeatSingle;
+          newShuffleType = ShuffleType.all;
+          await audioPlayer.setLoopMode(LoopMode.one);
+          break;
+        case PlaybackMode.repeatSingle:
+        default:
+          newMode = PlaybackMode.shuffle;
+          newShuffleType = ShuffleType.one;
+          await audioPlayer.setShuffleModeEnabled(true);
+          await audioPlayer.setLoopMode(LoopMode.all);
+          break;
+      }
+
+      emit(state.copyWith(
+        playbackMode: newMode,
+        shuffleType: newShuffleType,
+      ));
+    });
 
     on<ToggleVolumeEvent>((event, emit) async {
       final currentVolume = state.volumeByIndex[event.index] ?? 1.0;
