@@ -114,7 +114,7 @@ class _AllAudiobooksScreenState extends State<AllAudiobooksScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      CupertinoIcons.search,
+                      Icons.book_outlined,
                       size: 80.w,
                       color: Colors.grey,
                     ),
@@ -173,7 +173,7 @@ class _AllAudiobooksScreenState extends State<AllAudiobooksScreen> {
                           child: Column(
                             children: [
                               RowItemsWidgets(
-                                imageUrl: audiobook?.artist?.pictureXl ?? "",
+                                imageUrl: audiobook?.album?.coverXl ?? "",
                                 musicName: audiobook?.title ?? "",
                                 artistName: audiobook?.artist?.name ?? "",
                               ),

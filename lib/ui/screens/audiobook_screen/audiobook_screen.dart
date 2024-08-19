@@ -28,7 +28,6 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
     return BlocBuilder<AudiobookBloc, AudiobookState>(
       builder: (context, state) {
         final datum = state.audiobookModel?.data?[state.currentIndex];
-        final audiobook = state.audiobookModel?.data?[state.currentIndex];
         final bloc = context.read<AudiobookBloc>();
 
         return Scaffold(
@@ -50,7 +49,7 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AudiobookInfoWidget(
-                    imageUrl: datum?.artist?.pictureXl ?? "Unknown image",
+                    imageUrl: datum?.album?.coverXl ?? "Unknown image",
                     title: datum?.title ?? "Unknown name",
                     artistName: datum?.artist?.name ?? "Unknown name",
                   ),
@@ -150,19 +149,19 @@ class _AudiobookScreenState extends State<AudiobookScreen> {
                                   onPressed: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text("Downloading...${audiobook?.title}"),
+                                        content: Text("Downloading...${datum?.title}"),
                                       ),
                                     );
-                                    if (audiobook != null) {
+                                    if (datum != null) {
                                       context
                                           .read<AudiobookBloc>()
                                           .add(SaveDownloadedAudiobookEvent(
-                                        dataAudiobookModel: audiobook,
+                                        dataAudiobookModel: datum,
                                       ));
                                     }
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text("Downloading...${audiobook?.title}"),
+                                        content: Text("Downloaded! ${datum?.title}"),
                                       ),
                                     );
                                   },
